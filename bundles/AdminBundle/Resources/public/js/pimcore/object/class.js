@@ -290,7 +290,12 @@ pimcore.object.klass = Class.create({
             return false;
         }
 
-        if (in_array(classIdentifier.toLowerCase(), classes["existingIds"])) {
+        if (pimcore.helpers.findCaseInsensitiveValue(classes["existingNames"], className)) {
+            Ext.Msg.alert(' ', t('class_name_already_exists'));
+            return false;
+        }
+
+        if (pimcore.helpers.findCaseInsensitiveValue(classes["existingIds"], classIdentifier)) {
             Ext.Msg.alert(' ', t('class_identifier_already_exists'));
             return false;
         }
@@ -352,6 +357,6 @@ pimcore.object.klass = Class.create({
 
     activate: function () {
         Ext.getCmp("pimcore_panel_tabs").setActiveItem("pimcore_classes");
-    }
+    },
 
 });

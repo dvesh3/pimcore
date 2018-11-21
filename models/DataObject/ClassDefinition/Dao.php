@@ -66,6 +66,19 @@ class Dao extends Model\Dao\AbstractDao
         return $id;
     }
 
+    /**
+     * Get latest identifier
+     *
+     * @param int $classId
+     * @return int
+     */
+    public function getLatestIdentifier()
+    {
+        $maxId = $this->db->fetchOne('SELECT MAX(CAST(id AS SIGNED)) FROM classes');
+
+        return $maxId ? $maxId + 1 : 1;
+    }
+
     /** Updates the class definition
      * @param bool $isUpdate
      *

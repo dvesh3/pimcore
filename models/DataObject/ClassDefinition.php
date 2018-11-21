@@ -583,6 +583,23 @@ class ClassDefinition extends Model\AbstractModel
         return $text;
     }
 
+    /**
+     * @return int|null
+     */
+    public static function getIdentifier()
+    {
+        try {
+                $class = new self();
+                $identifier = $class->getDao()->getLatestIdentifier();
+
+                return $identifier;
+        } catch (\Exception $e) {
+            Logger::error($e);
+
+            return null;
+        }
+    }
+
     public function delete()
     {
         \Pimcore::getEventDispatcher()->dispatch(
