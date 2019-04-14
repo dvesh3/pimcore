@@ -487,7 +487,7 @@ class Asset extends Element\AbstractElement
 
         $params = $preEvent->getArguments();
 
-        $this->correctPath();
+        $this->correctPath($isUpdate);
 
         // we wrap the save actions in a loop here, so that we can restart the database transactions in the case it fails
         // if a transaction fails it gets restarted $maxRetries times, then the exception is thrown out
@@ -516,7 +516,9 @@ class Asset extends Element\AbstractElement
                     if (is_file($oldFullPath) || is_dir($oldFullPath)) {
                         if (!@File::rename(PIMCORE_ASSET_DIRECTORY . $oldPath, $this->getFileSystemPath())) {
                             $error = error_get_last();
-                            throw new \Exception('Unable to rename asset ' . $this->getId() . ' on the filesystem: ' . $oldFullPath . ' - Reason: ' . $error['message']);
+                            $e = new \Exception('Unable to rename asset ' . $this->getId() . ' on the filesystem: ' . $oldFullPath . ' - Reason: ' . $error['message']);
+                            $this->dispatchPostFailedEvent($e, $isUpdate);
+                            throw $e;
                         }
                         $differentOldPath = $oldPath;
                         $this->getDao()->updateWorkspaces();
@@ -550,11 +552,8 @@ class Asset extends Element\AbstractElement
 
                     usleep($waitTime); // wait specified time until we restart the transaction
                 } else {
-                    if ($isUpdate) {
-                        \Pimcore::getEventDispatcher()->dispatch(AssetEvents::POST_UPDATE_FAILURE, new AssetEvent($this));
-                    } else {
-                        \Pimcore::getEventDispatcher()->dispatch(AssetEvents::POST_ADD_FAILURE, new AssetEvent($this));
-                    }
+                    $this->dispatchPostFailedEvent($e, $isUpdate);
+                    
                     // if the transaction still fail after $maxRetries retries, we throw out the exception
                     throw $e;
                 }
@@ -590,21 +589,30 @@ class Asset extends Element\AbstractElement
     /**
      * @throws \Exception
      */
-    public function correctPath()
+    public function correctPath($isUpdate = false)
     {
         // set path
         if ($this->getId() != 1) { // not for the root node
 
             if (!Element\Service::isValidKey($this->getKey(), 'asset')) {
-                throw new \Exception("invalid filename '".$this->getKey()."' for asset with id [ " . $this->getId() . ' ]');
+                $e = new \Exception("invalid filename '".$this->getKey()."' for asset with id [ " . $this->getId() . ' ]');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                
+                throw $e;
             }
 
             if ($this->getParentId() == $this->getId()) {
-                throw new \Exception("ParentID and ID is identical, an element can't be the parent of itself.");
+                $e = new \Exception("ParentID and ID is identical, an element can't be the parent of itself.");
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                
+                throw $e;
             }
 
             if ($this->getFilename() === '..' || $this->getFilename() === '.') {
-                throw new \Exception('Cannot create asset called ".." or "."');
+                $e = new \Exception('Cannot create asset called ".." or "."');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                
+                throw $e;
             }
 
             $parent = Asset::getById($this->getParentId());
@@ -631,13 +639,19 @@ class Asset extends Element\AbstractElement
         }
 
         if (mb_strlen($this->getFilename()) > 255) {
-            throw new \Exception('Filenames longer than 255 characters are not allowed');
+            $e = new \Exception('Filenames longer than 255 characters are not allowed');
+            $this->dispatchPostFailedEvent($e, $isUpdate);
+            
+            throw $e;
         }
 
         if (Asset\Service::pathExists($this->getRealFullPath())) {
             $duplicate = Asset::getByPath($this->getRealFullPath());
             if ($duplicate instanceof Asset and $duplicate->getId() != $this->getId()) {
-                throw new \Exception('Duplicate full path [ ' . $this->getRealFullPath() . ' ] - cannot save asset');
+                $e = new \Exception('Duplicate full path [ ' . $this->getRealFullPath() . ' ] - cannot save asset');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+
+                throw $e;
             }
         }
 
@@ -1029,7 +1043,11 @@ class Asset extends Element\AbstractElement
             }
         } catch (\Exception $e) {
             $this->rollBack();
-            \Pimcore::getEventDispatcher()->dispatch(AssetEvents::POST_DELETE_FAILURE, new AssetEvent($this));
+            
+            $failureEvent = new AssetEvent($this);
+            $failureEvent->setArgument('exception', $e);
+            \Pimcore::getEventDispatcher()->dispatch(AssetEvents::POST_DELETE_FAILURE, $failureEvent);
+            
             Logger::crit($e);
             throw $e;
         }
@@ -1940,5 +1958,17 @@ class Asset extends Element\AbstractElement
         }
 
         return $dependencies;
+    }
+
+    private function dispatchPostFailedEvent($e, $isUpdate)
+    {
+        $failureEvent = new AssetEvent($this);
+        $failureEvent->setArgument('exception', $e);
+
+        if ($isUpdate) {
+            \Pimcore::getEventDispatcher()->dispatch(AssetEvents::POST_UPDATE_FAILURE, $failureEvent);
+        } else {
+            \Pimcore::getEventDispatcher()->dispatch(AssetEvents::POST_ADD_FAILURE, $failureEvent);
+        }
     }
 }

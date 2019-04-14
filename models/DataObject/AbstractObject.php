@@ -571,7 +571,9 @@ class AbstractObject extends Model\Element\AbstractElement
             $this->commit();
         } catch (\Exception $e) {
             $this->rollBack();
-            \Pimcore::getEventDispatcher()->dispatch(DataObjectEvents::POST_DELETE_FAILURE, new DataObjectEvent($this));
+            $failureEvent = new DataObjectEvent($this);
+            $failureEvent->setArgument('exception', $e);
+            \Pimcore::getEventDispatcher()->dispatch(DataObjectEvents::POST_DELETE_FAILURE, $failureEvent);
             Logger::crit($e);
             throw $e;
         }
@@ -612,7 +614,7 @@ class AbstractObject extends Model\Element\AbstractElement
 
         $params = $preEvent->getArguments();
 
-        $this->correctPath();
+        $this->correctPath($isUpdate);
 
         // we wrap the save actions in a loop here, so that we can restart the database transactions in the case it fails
         // if a transaction fails it gets restarted $maxRetries times, then the exception is thrown out
@@ -665,12 +667,17 @@ class AbstractObject extends Model\Element\AbstractElement
                     Logger::info($er);
                 }
 
+                
+
                 if ($e instanceof Model\Element\ValidationException) {
+                    $this->dispatchPostFailedEvent($e, $isUpdate);
                     throw $e;
                 }
 
                 if ($e instanceof UniqueConstraintViolationException) {
-                    throw new Element\ValidationException('unique constraint violation', 0, $e);
+                    $e = new Element\ValidationException('unique constraint violation', 0, $e);
+                    $this->dispatchPostFailedEvent($e, $isUpdate);
+                    throw $e;
                 }
 
                 // set "HideUnpublished" back to the value it was originally
@@ -684,11 +691,7 @@ class AbstractObject extends Model\Element\AbstractElement
 
                     usleep($waitTime); // wait specified time until we restart the transaction
                 } else {
-                    if ($isUpdate) {
-                        \Pimcore::getEventDispatcher()->dispatch(DataObjectEvents::POST_UPDATE_FAILURE, new DataObjectEvent($this));
-                    } else {
-                        \Pimcore::getEventDispatcher()->dispatch(DataObjectEvents::POST_ADD_FAILURE, new DataObjectEvent($this));
-                    }
+                    $this->dispatchPostFailedEvent($e, $isUpdate);
 
                     // if the transaction still fail after $maxRetries retries, we throw out the exception
                     Logger::error('Finally giving up restarting the same transaction again and again, last message: ' . $e->getMessage());
@@ -723,17 +726,21 @@ class AbstractObject extends Model\Element\AbstractElement
         return $this;
     }
 
-    public function correctPath()
+    public function correctPath($isUpdate = false)
     {
         // set path
         if ($this->getId() != 1) { // not for the root node
 
             if (!Element\Service::isValidKey($this->getKey(), 'object')) {
-                throw new \Exception('invalid key for object with id [ '.$this->getId().' ] key is: [' . $this->getKey() . ']');
+                $e = new \Exception('invalid key for object with id [ '.$this->getId().' ] key is: [' . $this->getKey() . ']');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
 
             if ($this->getParentId() == $this->getId()) {
-                throw new \Exception("ParentID and ID is identical, an element can't be the parent of itself.");
+                $e = new \Exception("ParentID and ID is identical, an element can't be the parent of itself.");
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
 
             $parent = AbstractObject::getById($this->getParentId());
@@ -749,7 +756,9 @@ class AbstractObject extends Model\Element\AbstractElement
             }
 
             if (strlen($this->getKey()) < 1) {
-                throw new \Exception('DataObject requires key');
+                $e = new \Exception('DataObject requires key');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
         } elseif ($this->getId() == 1) {
             // some data in root node should always be the same
@@ -762,7 +771,9 @@ class AbstractObject extends Model\Element\AbstractElement
         if (Service::pathExists($this->getRealFullPath())) {
             $duplicate = AbstractObject::getByPath($this->getRealFullPath());
             if ($duplicate instanceof self and $duplicate->getId() != $this->getId()) {
-                throw new \Exception('Duplicate full path [ '.$this->getRealFullPath().' ] - cannot save object');
+                $e = new \Exception('Duplicate full path [ '.$this->getRealFullPath().' ] - cannot save object');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
         }
 
@@ -1420,5 +1431,17 @@ class AbstractObject extends Model\Element\AbstractElement
         $this->o_versionCount = (int) $o_versionCount;
 
         return $this;
+    }
+
+    private function dispatchPostFailedEvent($e, $isUpdate)
+    {
+        $failureEvent = new DataObjectEvent($this);
+        $failureEvent->setArgument('exception', $e);
+
+        if ($isUpdate) {
+            \Pimcore::getEventDispatcher()->dispatch(DataObjectEvents::POST_UPDATE_FAILURE, $failureEvent);
+        } else {
+            \Pimcore::getEventDispatcher()->dispatch(DataObjectEvents::POST_ADD_FAILURE, $failureEvent);
+        }
     }
 }

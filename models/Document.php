@@ -405,7 +405,7 @@ class Document extends Element\AbstractElement
 
         $params = $preEvent->getArguments();
 
-        $this->correctPath();
+        $this->correctPath($isUpdate);
 
         // we wrap the save actions in a loop here, so that we can restart the database transactions in the case it fails
         // if a transaction fails it gets restarted $maxRetries times, then the exception is thrown out
@@ -456,12 +456,9 @@ class Document extends Element\AbstractElement
 
                     usleep($waitTime); // wait specified time until we restart the transaction
                 } else {
-                    if ($isUpdate) {
-                        \Pimcore::getEventDispatcher()->dispatch(DocumentEvents::POST_UPDATE_FAILURE, new DocumentEvent($this));
-                    } else {
-                        \Pimcore::getEventDispatcher()->dispatch(DocumentEvents::POST_ADD_FAILURE, new DocumentEvent($this));
-                    }
+                    
                     // if the transaction still fail after $maxRetries retries, we throw out the exception
+                    $this->dispatchPostFailedEvent($e, $isUpdate);
                     throw $e;
                 }
             }
@@ -497,18 +494,22 @@ class Document extends Element\AbstractElement
      *
      * @throws \Exception
      */
-    public function correctPath()
+    public function correctPath($isUpdate = false)
     {
         // set path
         if ($this->getId() != 1) { // not for the root node
 
             // check for a valid key, home has no key, so omit the check
             if (!Element\Service::isValidKey($this->getKey(), 'document')) {
-                throw new \Exception('invalid key for document with id [ ' . $this->getId() . ' ] key is: [' . $this->getKey() . ']');
+                $e = new \Exception('invalid key for document with id [ ' . $this->getId() . ' ] key is: [' . $this->getKey() . ']');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
 
             if ($this->getParentId() == $this->getId()) {
-                throw new \Exception("ParentID and ID is identical, an element can't be the parent of itself.");
+                $e = new \Exception("ParentID and ID is identical, an element can't be the parent of itself.");
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
 
             $parent = Document::getById($this->getParentId());
@@ -523,7 +524,9 @@ class Document extends Element\AbstractElement
             }
 
             if (strlen($this->getKey()) < 1) {
-                throw new \Exception('Document requires key, generated key automatically');
+                $e = new \Exception('Document requires key, generated key automatically');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
         } elseif ($this->getId() == 1) {
             // some data in root node should always be the same
@@ -536,7 +539,9 @@ class Document extends Element\AbstractElement
         if (Document\Service::pathExists($this->getRealFullPath())) {
             $duplicate = Document::getByPath($this->getRealFullPath());
             if ($duplicate instanceof Document and $duplicate->getId() != $this->getId()) {
-                throw new \Exception('Duplicate full path [ ' . $this->getRealFullPath() . ' ] - cannot save document');
+                $e = new \Exception('Duplicate full path [ ' . $this->getRealFullPath() . ' ] - cannot save document');
+                $this->dispatchPostFailedEvent($e, $isUpdate);
+                throw $e;
             }
         }
 
@@ -811,7 +816,11 @@ class Document extends Element\AbstractElement
             $this->commit();
         } catch (\Exception $e) {
             $this->rollBack();
-            \Pimcore::getEventDispatcher()->dispatch(DocumentEvents::POST_DELETE_FAILURE, new DocumentEvent($this));
+
+            $failureEvent = new DocumentEvent($this);
+            $failureEvent->setArgument('exception', $e);
+            \Pimcore::getEventDispatcher()->dispatch(DocumentEvents::POST_DELETE_FAILURE, $failureEvent);
+
             Logger::error($e);
             throw $e;
         }
@@ -1496,5 +1505,17 @@ class Document extends Element\AbstractElement
         $this->versionCount = (int) $versionCount;
 
         return $this;
+    }
+
+    private function dispatchPostFailedEvent($e, $isUpdate)
+    {
+        $failureEvent = new DocumentEvent($this);
+        $failureEvent->setArgument('exception', $e);
+
+        if ($isUpdate) {
+            \Pimcore::getEventDispatcher()->dispatch(DocumentEvents::POST_UPDATE_FAILURE, $failureEvent);
+        } else {
+            \Pimcore::getEventDispatcher()->dispatch(DocumentEvents::POST_ADD_FAILURE, $failureEvent);
+        }
     }
 }
