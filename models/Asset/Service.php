@@ -29,6 +29,12 @@ use Pimcore\Model\Element;
 class Service extends Model\Element\Service
 {
     /**
+     *
+     * @var array
+     */
+    protected static $systemFields = ['id', 'type', 'fullpath', 'filename', 'creationDate', 'modificationDate', 'idPath'];
+
+    /**
      * @var Model\User|null
      */
     protected $_user;
@@ -166,14 +172,50 @@ class Service extends Model\Element\Service
         return $target;
     }
 
+
     /**
-     * @param  Asset $asset
+     * @param $asset
+     * @param null $fields
+     * @param null $requestedLanguage
+     * @param array $params
      *
-     * @return $this
+     * @return array
      */
-    public static function gridAssetData($asset)
+    public static function gridAssetData($asset, $fields = null, $requestedLanguage = null, $params = [])
     {
         $data = Element\Service::gridElementData($asset);
+
+        if ($asset instanceof Asset && !empty($fields)) {
+
+            $data = [
+                'id' => $asset->getid(),
+                'type' => $asset->getType(),
+                'fullpath' => $asset->getRealFullPath(),
+                'filename' => $asset->getKey(),
+                'creationDate' => $asset->getCreationDate(),
+                'modificationDate' => $asset->getModificationDate(),
+                'idPath' => Element\Service::getIdPath($asset),
+            ];
+
+            foreach ($fields as $field) {
+                if ($field == "preview") {
+                    $data[$field] = $asset->getId();
+                } else if ($field == "size") {
+                    /** @var $asset Asset */
+                    $filename = PIMCORE_ASSET_DIRECTORY . '/' . $asset->getRealFullPath();
+                    $size = @filesize($filename);
+                    $data[$field] = formatBytes($size);
+                } else if (!in_array($field, self::$systemFields)) {
+                    $metaData = $asset->getMetadata($field, $requestedLanguage);
+                    if($metaData instanceof \Pimcore\Model\Element\AbstractElement) {
+                        $metaData = $metaData->getFullPath();
+                    }
+
+                    $data[$field] = $metaData;
+                }
+            }
+
+        }
 
         return $data;
     }
