@@ -20,6 +20,7 @@ use Pimcore\Bundle\AdminBundle\Controller\AdminController;
 use Pimcore\Bundle\AdminBundle\Helper\GridHelperService;
 use Pimcore\Db;
 use Pimcore\Localization\LocaleServiceInterface;
+use Pimcore\Logger;
 use Pimcore\Model\Asset;
 use Pimcore\Model\Element;
 use Pimcore\Model\GridConfig;
