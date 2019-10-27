@@ -135,4 +135,97 @@ pimcore.asset.helpers.gridTabAbstract = Class.create({
 
         return config;
     },
+
+    getCellRenderer: function (field, value) {
+        console.log(field);
+        console.log(value);
+        var data = store.getAt(rowIndex).data;
+        var type = data.type;
+
+        if (type == "textarea") {
+            return nl2br(Ext.util.Format.htmlEncode(value));
+        } else if (type == "document" || type == "asset" || type == "object") {
+            if (value) {
+                return '<div class="pimcore_property_droptarget">' + value + '</div>';
+            } else {
+                return '<div class="pimcore_property_droptarget">&nbsp;</div>';
+            }
+        } else if (type == "date") {
+            if (value) {
+                if(!(value instanceof Date)) {
+                    value = new Date(value * 1000);
+                }
+                return Ext.Date.format(value, "Y-m-d");
+            }
+        } else if (type == "checkbox") {
+            if (value) {
+                return '<div style="text-align: left"><div role="button" class="x-grid-checkcolumn x-grid-checkcolumn-checked" style=""></div></div>';
+            } else {
+                return '<div style="text-align: left"><div role="button" class="x-grid-checkcolumn" style=""></div></div>';
+            }
+        }
+
+        return Ext.util.Format.htmlEncode(value);
+    },
+
+    getCellEditor: function (field, defaultField ) {
+        var data = field.data;
+
+        var type = field.type;
+        var property;
+
+        if (type == "input") {
+            property = Ext.create('Ext.form.TextField');
+        } else if (type == "textarea") {
+            property = Ext.create('Ext.form.TextArea');
+        } else if (type == "document" || type == "asset" || type == "object") {
+            //no editor needed here
+        } else if (type == "date") {
+            property = Ext.create('Ext.form.field.Date', {
+                format: "Y-m-d"
+            });
+        } else if (type == "checkbox") {
+            //no editor needed here
+        } else if (type == "select") {
+            if (field.layout.config) {
+                var options = field.layout.config;
+                property =  Ext.create('Ext.form.ComboBox', {
+                    triggerAction: 'all',
+                    editable: false,
+                    store: options.split(",")
+                });
+            }
+
+        }
+
+        return property;
+    },
+
+    getValues : function () {
+
+        var values = [];
+        var store = this.grid.getStore();
+        store.commitChanges();
+
+        var records = store.getRange();
+
+        for (var i = 0; i < records.length; i++) {
+            var currentData = records[i];
+            if (currentData) {
+                var data = currentData.data.data;
+                if (data && currentData.data.type == "date") {
+                    data = data.valueOf() / 1000;
+                }
+                values.push({
+                    data: data,
+                    type: currentData.data.type,
+                    name: currentData.data.name,
+                    language: currentData.data.language
+                });
+            }
+        }
+
+
+        return values;
+    },
 });

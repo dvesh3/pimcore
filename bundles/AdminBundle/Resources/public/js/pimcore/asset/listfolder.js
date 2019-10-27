@@ -26,6 +26,8 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
         this.searchType = searchType;
         this.classId = element.id;
         this.object.id = element.id;
+        this.noBatchColumns = [];
+        this.batchAppendColumns = [];
     },
 
     getLayout: function () {
@@ -67,21 +69,21 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
 
         var fields = [];
 
-        this.filterField = new Ext.form.TextField({
-            width: 200,
-            style: "margin: 0 10px 0 0;",
-            enableKeyEvents: true,
-            value: this.preconfiguredFilter,
-            listeners: {
-                "keydown" : function (field, key) {
-                    if (key.getKey() == key.ENTER) {
-                        var input = field;
-                        var proxy = this.store.baseParams.filter = input.getValue();
-                        this.store.load();
-                    }
-                }.bind(this)
-            }
-        });
+        // this.filterField = new Ext.form.TextField({
+        //     width: 200,
+        //     style: "margin: 0 10px 0 0;",
+        //     enableKeyEvents: true,
+        //     value: this.preconfiguredFilter,
+        //     listeners: {
+        //         "keydown" : function (field, key) {
+        //             if (key.getKey() == key.ENTER) {
+        //                 var input = field;
+        //                 var proxy = this.store.baseParams.filter = input.getValue();
+        //                 this.store.load();
+        //             }
+        //         }.bind(this)
+        //     }
+        // });
 
         if (response.responseText) {
             response = Ext.decode(response.responseText);
@@ -119,41 +121,73 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
             this.fieldObject[fields[i].key] = fields[i];
         }
 
+        this.cellEditing = Ext.create('Ext.grid.plugin.CellEditing', {
+                clicksToEdit: 1
+            }
+        );
+
         var fieldParam = Object.keys(this.fieldObject);
 
-        var proxy = new Ext.data.HttpProxy({
-            type: 'ajax',
-            url: "/admin/asset/grid-proxy",
-            reader: {
-                type: 'json',
-                rootProperty: 'data',
-                totalProperty: 'total',
-                successProperty: 'success',
-                idProperty: 'key'
-            },
-            extraParams: {
-                limit: itemsPerPage,
-                folderId: this.element.data.id,
-                "fields[]": fieldParam,
+        var gridHelper = new pimcore.asset.helpers.grid(
+            fields,
+            "/admin/asset/grid-proxy",
+            {
                 language: this.gridLanguage,
-                only_direct_children: this.onlyDirectChildren,
-                only_unreferenced: this.onlyUnreferenced
-            }
-        });
+                // limit: itemsPerPage
+            },
+            false
+        );
 
-        var readerFields = ['preview', 'id', 'fullpath', 'filename', 'type', 'creationDate', 'modificationDate', 'size', 'idPath'];
+        gridHelper.showSubtype = false;
+        gridHelper.enableEditor = true;
+        gridHelper.limit = itemsPerPage;
 
-        this.selectionColumn = new Ext.selection.CheckboxModel();
-        typesColumns = this.getGridColumns(fields);
 
-        this.store = new Ext.data.Store({
-            proxy: proxy,
-            pageSize: itemsPerPage,
-            remoteSort: true,
-            remoteFilter: true,
-            filter: this.filterField,
-            fields: readerFields
-        });
+        //var readerFields = ['preview', 'id', 'fullpath', 'filename', 'type', 'creationDate', 'modificationDate', 'size', 'idPath'];
+
+        //this.selectionColumn = new Ext.selection.CheckboxModel();
+        //typesColumns = this.getGridColumns(fields);
+
+        // this.store = new Ext.data.Store({
+        //     proxy: proxy,
+        //     autoSync: true,
+        //     pageSize: itemsPerPage,
+        //     remoteSort: true,
+        //     remoteFilter: true,
+        //     filter: this.filterField,
+        //     fields: readerFields
+        // });
+
+        var existingFilters;
+        if (this.store) {
+            existingFilters = this.store.getFilters();
+        }
+
+        this.store = gridHelper.getStore(this.noBatchColumns, this.batchAppendColumns);
+        if (this.sortinfo) {
+            this.store.sort(this.sortinfo.field, this.sortinfo.direction);
+        }
+
+        this.store.getProxy().extraParams = {
+            limit: itemsPerPage,
+            folderId: this.element.data.id,
+            "fields[]": fieldParam,
+            language: this.gridLanguage,
+            only_direct_children: this.onlyDirectChildren,
+            only_unreferenced: this.onlyUnreferenced
+        };
+
+        this.store.setPageSize(itemsPerPage);
+
+        if (existingFilters) {
+            this.store.setFilters(existingFilters.items);
+        }
+
+        var gridColumns = gridHelper.getGridColumns();
+
+        // add filters
+        this.gridfilters = gridHelper.getGridFilters();
+
 
         this.pagingtoolbar = pimcore.helpers.grid.buildDefaultPagingToolbar(this.store, {pageSize: itemsPerPage});
 
@@ -249,11 +283,12 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
             store: this.store,
             columnLines: true,
             stripeRows: true,
-            columns : typesColumns,
-            plugins: ['pimcore.gridfilters'],
+            bodyCls: "pimcore_editable_grid",
+            columns : gridColumns,
+            plugins: [this.cellEditing, 'pimcore.gridfilters'],
             trackMouseOver: true,
             bbar: this.pagingtoolbar,
-            selModel: this.selectionColumn,
+            selModel: gridHelper.getSelectionColumn(),
             viewConfig: {
                 forceFit: true,
                 enableTextSelection: true
@@ -262,11 +297,14 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
                 activate: function() {
                     this.store.load();
                 }.bind(this),
-                rowdblclick: function(grid, record, tr, rowIndex, e, eOpts ) {
-                    var data = this.store.getAt(rowIndex);
-                    pimcore.helpers.openAsset(data.get("id"), data.get("type"));
-
-                }.bind(this)
+                celldblclick: function(grid, td, cellIndex, record, tr, rowIndex, e, eOpts) {
+                    var columnName = grid.ownerGrid.getColumns();
+                    if(columnName[cellIndex].dataIndex == 'id' || columnName[cellIndex].dataIndex == 'fullpath'
+                        || columnName[cellIndex].dataIndex == 'preview') {
+                        var data = this.store.getAt(rowIndex);
+                        pimcore.helpers.openAsset(data.get("id"), data.get("type"));
+                    }
+                }
             },
             tbar: [
                 this.languageInfo, "->",
@@ -288,6 +326,10 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
 
         this.grid.on("rowcontextmenu", this.onRowContextmenu);
 
+        this.grid.on("afterrender", function (grid) {
+            this.updateGridHeaderContextMenu(grid);
+        }.bind(this));
+
         this.layout.removeAll();
         this.layout.add(this.grid);
         this.layout.updateLayout();
@@ -298,89 +340,8 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
             }
             this.saveConfig(false);
         }
-    },
 
-    getGridColumns: function(fields) {
-        var gridColumns = [];
-
-        for (i = 0; i < fields.length; i++) {
-            var field = fields[i];
-            var key = field.name;
-            var language = field.language;
-            if (!key) {
-                key = "";
-            }
-            if (!language) {
-                language = "";
-            }
-
-            if (!field.type) {
-                continue;
-            }
-
-            if (field.type == "system") {
-                if(field.key == "preview") {
-                    gridColumns.push({
-                        text: t("preview"), sortable: false, dataIndex: 'preview', editable: false, width: this.getColumnWidth(field, 150),
-                        renderer: function (value) {
-                            if (value) {
-                                return '<img src="' + value + '" />';
-                            }
-                        }.bind(this)
-                    });
-                } else if (field.key == "creationDate" || field.key == "modificationDate") {
-                    gridColumns.push({text: t(field.key), width: this.getColumnWidth(field, 150), sortable: true, dataIndex: field.key, editable: false, filter: 'date',
-                       renderer: function(d) {
-                            var date = new Date(d * 1000);
-                            return Ext.Date.format(date, "Y-m-d H:i:s");
-                        }
-                    });
-                } else if (field.key == "filename") {
-                    gridColumns.push({text: t(field.key), sortable: true, dataIndex: field.key, editable: false,
-                        width: this.getColumnWidth(field, 250), filter: 'string', renderer: Ext.util.Format.htmlEncode});
-                } else if (field.key == "fullpath") {
-                    gridColumns.push({text: t(field.key), sortable: true, dataIndex: field.key, editable: false,
-                        width: this.getColumnWidth(field, 400), filter: 'string', renderer: Ext.util.Format.htmlEncode});
-                } else if (field.key == "size") {
-                    gridColumns.push({text: t(field.key), sortable: false, dataIndex: field.key, editable: false,
-                        width: this.getColumnWidth(field, 130)});
-                } else {
-                    gridColumns.push({text: t(field.key),  width: this.getColumnWidth(field, 130), sortable: true,
-                        dataIndex: field.key});
-                }
-            } else if (field.type == "date") {
-                gridColumns.push({text: field.key,  width: this.getColumnWidth(field, 120), sortable: false,
-                    dataIndex: field.key, filter: 'date', editable: false,
-                    renderer: function(d) {
-                        if (d) {
-                            var date = new Date(d * 1000);
-                            return Ext.Date.format(date, "Y-m-d");
-                        }
-
-                    }
-                });
-            } else if (field.type == "checkbox") {
-                gridColumns.push(new Ext.grid.column.Check({
-                    text:  field.key,
-                    editable: false,
-                    width: this.getColumnWidth(field, 40),
-                    sortable: false,
-                    filter: 'boolean',
-                    dataIndex: field.key
-                }));
-            } else if (field.type == "select") {
-                gridColumns.push({text: field.key,  width: this.getColumnWidth(field, 200), sortable: false,
-                    dataIndex: field.key, filter: 'string'});
-            } else if (field.type == "document" || field.type == "asset" || field.type == "object") {
-                gridColumns.push({text: field.key,  width: this.getColumnWidth(field, 300), sortable: false,
-                    dataIndex: field.key});
-            } else {
-                gridColumns.push({text: field.key,  width: this.getColumnWidth(field, 250), sortable: false,
-                    dataIndex: field.key, filter: 'string'});
-            }
-        }
-
-        return gridColumns;
+        //this.grid.getView().on("refresh", this.updateRows.bind(this, "view-refresh"));
     },
 
     getColumnWidth: function(field, defaultValue) {
@@ -510,7 +471,298 @@ pimcore.asset.listfolder = Class.create(pimcore.asset.helpers.gridTabAbstract, {
 
         e.stopEvent();
         menu.showAt(e.getXY());
-    }
+    },
+
+    updateGridHeaderContextMenu: function (grid) {
+        console.log('hereee!!!!!');
+        var columnConfig = new Ext.menu.Item({
+            text: t("grid_options"),
+            iconCls: "pimcore_icon_table_col pimcore_icon_overlay_edit",
+            handler: this.openColumnConfig.bind(this)
+        });
+        var menu = grid.headerCt.getMenu();
+        menu.add(columnConfig);
+        //
+        var batchAllMenu = new Ext.menu.Item({
+            text: t("batch_change"),
+            iconCls: "pimcore_icon_table pimcore_icon_overlay_go",
+            handler: function (grid) {
+                menu = grid.headerCt.getMenu();
+                var columnDataIndex = menu.activeHeader;
+                this.batchPrepare(columnDataIndex.fullColumnIndex, false, false);
+            }.bind(this, grid)
+        });
+        menu.add(batchAllMenu);
+
+        var batchSelectedMenu = new Ext.menu.Item({
+            text: t("batch_change_selected"),
+            iconCls: "pimcore_icon_structuredTable pimcore_icon_overlay_go",
+            handler: function (grid) {
+                menu = grid.headerCt.getMenu();
+                var columnDataIndex = menu.activeHeader;
+                this.batchPrepare(columnDataIndex.fullColumnIndex, true, false);
+            }.bind(this, grid)
+        });
+        menu.add(batchSelectedMenu);
+
+        var batchAppendAllMenu = new Ext.menu.Item({
+            text: t("batch_append_all"),
+            iconCls: "pimcore_icon_table pimcore_icon_overlay_go",
+            handler: function (grid) {
+                menu = grid.headerCt.getMenu();
+                var columnDataIndex = menu.activeHeader;
+                this.batchPrepare(columnDataIndex.fullColumnIndex, false, true);
+            }.bind(this, grid)
+        });
+        menu.add(batchAppendAllMenu);
+
+        var batchAppendSelectedMenu = new Ext.menu.Item({
+            text: t("batch_append_selected"),
+            iconCls: "pimcore_icon_structuredTable pimcore_icon_overlay_go",
+            handler: function (grid) {
+                menu = grid.headerCt.getMenu();
+                var columnDataIndex = menu.activeHeader;
+                this.batchPrepare(columnDataIndex.fullColumnIndex, true, true);
+            }.bind(this, grid)
+        });
+        menu.add(batchAppendSelectedMenu);
+        //
+        menu.on('beforeshow', function (batchAllMenu, batchSelectedMenu, grid) {
+            var menu = grid.headerCt.getMenu();
+            var columnDataIndex = menu.activeHeader.dataIndex;
+
+            var view = grid.getView();
+            // no batch for system properties
+            if (Ext.Array.contains(this.systemColumns, columnDataIndex) || Ext.Array.contains(this.noBatchColumns, columnDataIndex)) {
+                batchAllMenu.hide();
+                batchSelectedMenu.hide();
+            } else {
+                batchAllMenu.show();
+                batchSelectedMenu.show();
+            }
+
+            if (!Ext.Array.contains(this.systemColumns, columnDataIndex) && Ext.Array.contains(this.batchAppendColumns ? this.batchAppendColumns : [], columnDataIndex)) {
+                batchAppendAllMenu.show();
+                batchAppendSelectedMenu.show();
+            } else {
+                batchAppendAllMenu.hide();
+                batchAppendSelectedMenu.hide();
+            }
+        }.bind(this, batchAllMenu, batchSelectedMenu, grid));
+    },
+
+    batchPrepare: function (columnIndex, onlySelected, append) {
+        // no batch for system properties
+        if (this.systemColumns.indexOf(this.grid.getColumns()[columnIndex].dataIndex) > -1) {
+            return;
+        }
+
+        var jobs = [];
+        if (onlySelected) {
+            var selectedRows = this.grid.getSelectionModel().getSelection();
+            for (var i = 0; i < selectedRows.length; i++) {
+                jobs.push(selectedRows[i].get("id"));
+            }
+            this.batchOpen(columnIndex, jobs, append, true);
+
+        } else {
+
+            var filters = "";
+            var condition = "";
+
+            var filterData = this.store.getFilters().items;
+            if (filterData.length > 0) {
+                filters = this.store.getProxy().encodeFilters(filterData);
+            }
+
+            var fields = this.getGridConfig().columns;
+            var fieldKeys = Object.keys(fields);
+
+            var params = {
+                filter: filters,
+                condition: condition,
+                classId: this.classId,
+                folderId: this.element.id,
+                objecttype: this.objecttype,
+                "fields[]": fieldKeys,
+                language: this.gridLanguage,
+                batch: true //to avoid limit on batch edit/append all
+            };
+
+            Ext.Ajax.request({
+                url: "/admin/asset-helper/get-batch-jobs",
+                params: params,
+                success: function (columnIndex, response) {
+                    var rdata = Ext.decode(response.responseText);
+                    if (rdata.success && rdata.jobs) {
+                        this.batchOpen(columnIndex, rdata.jobs, append, false);
+                    }
+
+                }.bind(this, columnIndex)
+            });
+        }
+
+    },
+
+    batchOpen: function (columnIndex, jobs, append, onlySelected) {
+
+        columnIndex = columnIndex - 1;
+
+        var fieldConfig = this.grid.getColumns()[columnIndex + 1].config;
+        var fieldInfo = this.fieldObject[fieldConfig.text];
+
+        // HACK: typemapping for published (systemfields) because they have no edit masks, so we use them from the
+        // data-types
+        if (fieldInfo.dataIndex == "published") {
+            fieldInfo.layout = {
+                type: "checkbox",
+                title: t("published"),
+                name: "published",
+            };
+        }
+        // HACK END
+
+        var tagType = fieldInfo.layout.fieldtype;
+        var editor = new pimcore.asset.tags[tagType](null, fieldInfo.layout);
+        editor.setAsset(this.asset);
+        editor.updateContext({
+            containerType: "batch"
+        });
+
+        var formPanel = Ext.create('Ext.form.Panel', {
+            xtype: "form",
+            border: false,
+            items: [editor.getLayoutEdit()],
+            bodyStyle: "padding: 10px;",
+            buttons: [
+                {
+                    text: t("save"),
+                    handler: function () {
+                        if (formPanel.isValid()) {
+                            this.batchProcess(jobs, append, editor, fieldInfo, true);
+                        }
+                    }.bind(this)
+                }
+            ]
+        });
+        var batchTitle = onlySelected ? "batch_edit_field_selected" : "batch_edit_field";
+        var appendTitle = onlySelected ? "batch_append_selected_to" : "batch_append_to";
+        var title = append ? t(appendTitle) + " " + fieldInfo.text : t(batchTitle) + " " + fieldInfo.text;
+        this.batchWin = new Ext.Window({
+            autoScroll: true,
+            modal: false,
+            title: title,
+            items: [formPanel],
+            bodyStyle: "background: #fff;",
+            width: 700,
+            maxHeight: 600
+        });
+        this.batchWin.show();
+        this.batchWin.updateLayout();
+    },
+
+    batchProcess: function (jobs, append, editor, fieldInfo, initial) {
+        if (initial) {
+            this.batchErrors = [];
+            this.batchJobCurrent = 0;
+
+            var newValue = editor.getValue();
+
+            var valueType = "primitive";
+            if (newValue && typeof newValue == "object") {
+                newValue = Ext.encode(newValue);
+                valueType = "object";
+            }
+
+            this.batchParameters = {
+                name: fieldInfo.key,
+                value: newValue,
+                valueType: valueType,
+                language: this.gridLanguage
+            };
+
+
+            this.batchWin.close();
+
+            this.batchProgressBar = new Ext.ProgressBar({
+                text: t('initializing'),
+                style: "margin: 10px;",
+                width: 500
+            });
+
+            this.batchProgressWin = new Ext.Window({
+                items: [this.batchProgressBar],
+                modal: true,
+                bodyStyle: "background: #fff;",
+                closable: false
+            });
+            this.batchProgressWin.show();
+
+        }
+
+        if (this.batchJobCurrent >= jobs.length) {
+            this.batchProgressWin.close();
+            this.pagingtoolbar.moveFirst();
+            try {
+                var tree = pimcore.globalmanager.get("layout_object_tree").tree;
+                tree.getStore().load({
+                    node: tree.getRootNode()
+                });
+            } catch (e) {
+                console.log(e);
+            }
+
+            // error handling
+            if (this.batchErrors.length > 0) {
+                var jobErrors = [];
+                for (var i = 0; i < this.batchErrors.length; i++) {
+                    jobErrors.push(this.batchErrors[i].job + ' - ' + this.batchErrors[i].error);
+                }
+                Ext.Msg.alert(t("error"), t("error_jobs") + ":<br>" + jobErrors.join("<br>"));
+            }
+
+            return;
+        }
+
+        var status = (this.batchJobCurrent / jobs.length);
+        var percent = Math.ceil(status * 100);
+        this.batchProgressBar.updateProgress(status, percent + "%");
+
+        this.batchParameters.job = jobs[this.batchJobCurrent];
+        if (append) {
+            this.batchParameters.append = 1;
+        }
+
+        Ext.Ajax.request({
+            url: "/admin/asset-helper/batch",
+            method: 'PUT',
+            params: {
+                data: Ext.encode(this.batchParameters)
+            },
+            success: function (jobs, currentJob, response) {
+
+                try {
+                    var rdata = Ext.decode(response.responseText);
+                    if (rdata) {
+                        if (!rdata.success) {
+                            throw "not successful";
+                        }
+                    }
+                } catch (e) {
+                    this.batchErrors.push({
+                        job: currentJob,
+                        error: (typeof(rdata.message) !== "undefined" && rdata.message) ?
+                            rdata.message : 'Not Successful'
+                    });
+                }
+
+                window.setTimeout(function () {
+                    this.batchJobCurrent++;
+                    this.batchProcess(jobs, append);
+                }.bind(this), 400);
+            }.bind(this, jobs, this.batchParameters.job)
+        });
+    },
 
 });
 
