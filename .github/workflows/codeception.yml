@@ -18,7 +18,7 @@ env:
     PIMCORE_TEST: 1
     PIMCORE_TEST_DB_DSN: "mysql://root@127.0.0.1:33006/pimcore_test"
     PIMCORE_TEST_REDIS_DSN: "redis://127.0.0.1:63379"
-    PIMCORE_TEST_URL: "http://pimcore-test.dev"
+    PIMCORE_TEST_URL: "http://127.0.0.1:8080"
 
 jobs:
     codeception-tests:
@@ -77,13 +77,13 @@ jobs:
 #                        symfony-version: "^4.0"
 #                        test-options: ""
 
-                    -   name: "REST Tests - PHP 7.4 | Symfony 3.4 | MySQL 8.0"
-                        php-version: 7.4
-                        dependencies: highest
-                        experimental: false
-                        database: "mysql:8.0"
-                        symfony-version: "^3.4"
-                        test-options: "Rest --env http"
+#                    -   name: "REST Tests - PHP 7.4 | Symfony 3.4 | MySQL 8.0"
+#                        php-version: 7.4
+#                        dependencies: highest
+#                        experimental: false
+#                        database: "mysql:8.0"
+#                        symfony-version: "^3.4"
+#                        test-options: "Rest --env http"
 
                     -   name: "REST Tests - PHP 7.3 | Symfony 3.4"
                         php-version: 7.3
@@ -103,15 +103,16 @@ jobs:
                     - 33006:3306
                 env:
                     MYSQL_ALLOW_EMPTY_PASSWORD: yes
-            web:
-                image: httpd:latest
+            nginx:
+                image: nginx:latest
                 ports:
-                    - "8010:80"
+                    - "8080:80"
                 volumes:
-                    - .:/var/www/html
-                    - ./docker/nginx/config/site.conf:/usr/local/apache2/conf/httpd.conf
-
+                    - ${{ matrix.experimental }}:/var/www/html
         steps:
+            - name: "Test Rest"
+              run: curl ${{ env.PIMCORE_TEST_URL }}
+
             - name: "Checkout code"
               uses: "actions/checkout@v2"
 
@@ -157,5 +158,4 @@ jobs:
 
             - name: "Run Codeception"
               run: |
-                  php -S pimcore-test.dev -t ${{ github.workspace }}/web >/dev/null 2>&1 &
                   php vendor/bin/codecept run -c . -vvv ${{ matrix.test-options }} --json
