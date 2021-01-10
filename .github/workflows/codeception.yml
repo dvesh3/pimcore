@@ -105,8 +105,7 @@ jobs:
                     MYSQL_ALLOW_EMPTY_PASSWORD: yes
             web:
                 image: pimcore/pimcore:PHP${{ matrix.php-version }}-apache-test
-                container_name: pimcore-php
-                options: --link db:db --link redis:redis -v ${{ matrix.workspace }}:/var/www/html:cached
+                options: --link db:db --link redis:redis -v ${{ matrix.workspace }}:/var/www/html:cached --name pimcore-php
                 ports:
                     - "2000:80"
                     - "2001:443"
