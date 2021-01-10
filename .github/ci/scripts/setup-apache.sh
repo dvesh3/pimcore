@@ -7,7 +7,6 @@ sudo chmod 0755 $PIMCORE_PROJECT_ROOT
 echo $PIMCORE_PROJECT_ROOT
 
 # install apache
-sudo a2enmod rewrite actions fastcgi alias env
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
 
