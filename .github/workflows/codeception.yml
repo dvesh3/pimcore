@@ -109,9 +109,6 @@ jobs:
                     - "8080:80"
 
         steps:
-            - name: "Test Rest"
-              run: curl ${{ env.PIMCORE_TEST_URL }}
-
             - name: "Checkout code"
               uses: "actions/checkout@v2"
 
@@ -155,9 +152,12 @@ jobs:
                   php -i
                   ./bin/console pimcore:system:requirements:check
 
-            - name: Setup Webserver
+            - name: "Setup Webserver"
               run: |
                   .github/ci/scripts/setup-apache.sh
+
+            -   name: "Test Rest"
+                run: curl ${{ env.PIMCORE_TEST_URL }}
 
             - name: "Run Codeception"
               run: |
