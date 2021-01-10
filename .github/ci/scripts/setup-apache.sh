@@ -5,9 +5,8 @@ set -e
 # set home directory permissions to be readable by apache
 sudo chmod 0755 $PIMCORE_PROJECT_ROOT
 echo $PIMCORE_PROJECT_ROOT
+
 # install apache
-sudo apt-get update --allow-unauthenticated
-sudo apt-get install apache2 libapache2-mod-fastcgi
 sudo a2enmod rewrite actions fastcgi alias env
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*

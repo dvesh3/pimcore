@@ -120,6 +120,11 @@ jobs:
                   ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
                   php-version: "${{ matrix.php-version }}"
 
+            - name: "Configure Webserver"
+              run: |
+                  .github/ci/scripts/setup-apache.sh
+                  curl ${{ env.PIMCORE_TEST_URL }}
+
             - name: "Verify DB connection"
               run: |
                   cp .github/ci/files/.my.cnf ~/.my.cnf
@@ -151,13 +156,6 @@ jobs:
                   mysql -e "SELECT VERSION();"
                   php -i
                   ./bin/console pimcore:system:requirements:check
-
-            - name: "Setup Webserver"
-              run: |
-                  .github/ci/scripts/setup-apache.sh
-
-            -   name: "Test Rest"
-                run: curl ${{ env.PIMCORE_TEST_URL }}
 
             - name: "Run Codeception"
               run: |
