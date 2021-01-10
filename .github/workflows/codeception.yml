@@ -104,10 +104,9 @@ jobs:
                 env:
                     MYSQL_ALLOW_EMPTY_PASSWORD: yes
             web:
-                image: nginx:latest
+                image: httpd
                 ports:
                     - "8080:80"
-                options: -v ${{ github.workspace }}:/var/www/html -v ${{ github.workspace }}/site.conf:/etc/nginx/conf.d/default.conf --name nginx
 
         steps:
             - name: "Test Rest"
@@ -156,10 +155,9 @@ jobs:
                   php -i
                   ./bin/console pimcore:system:requirements:check
 
-            - name: Restart nginx
-              uses: docker://docker
-              with:
-                  args: docker restart nginx
+            - name: Setup Webserver
+              run: |
+                  .github/ci/scripts/setup-apache.sh
 
             - name: "Run Codeception"
               run: |
