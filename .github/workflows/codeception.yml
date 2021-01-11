@@ -105,18 +105,17 @@ jobs:
                     MYSQL_ALLOW_EMPTY_PASSWORD: yes
 
         steps:
+            - name: "Checkout code"
+              uses: "actions/checkout@v2"
+
             - name: "Configure Webserver"
               run: |
-                    .github/ci/scripts/setup-apache.sh
-                    curl ${{ env.PIMCORE_TEST_URL }}
+                  .github/ci/scripts/setup-apache.sh
+                  curl ${{ env.PIMCORE_TEST_URL }}
 
-#
-#            - name: "Test Rest"
-#              run: curl ${{ env.PIMCORE_TEST_URL }}
-#
-#            - name: "Checkout code"
-#              uses: "actions/checkout@v2"
-#
+
+            - name: "Test Rest"
+              run: curl ${{ env.PIMCORE_TEST_URL }}
 #            - name: "Install PHP"
 #              uses: "shivammathur/setup-php@v2"
 #              with:
