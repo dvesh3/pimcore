@@ -2,6 +2,9 @@
 
 set -e
 
+sudo nano /etc/apt/sources.list
+
+echo  "----done-----"
 # set home directory permissions to be readable by apache
 sudo chmod 0755 $PIMCORE_PROJECT_ROOT
 echo $PIMCORE_PROJECT_ROOT
