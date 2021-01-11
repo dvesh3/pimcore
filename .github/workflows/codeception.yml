@@ -103,60 +103,60 @@ jobs:
                     - 33006:3306
                 env:
                     MYSQL_ALLOW_EMPTY_PASSWORD: yes
-            web:
-                image: pimcore/pimcore:PHP${{ matrix.php-version }}-apache-test
-                options: --link db:db --link redis:redis -v ${{ matrix.workspace }}:/var/www/html:cached --name pimcore-php
-                ports:
-                    - "2000:80"
-                    - "2001:443"
 
         steps:
-            - name: "Test Rest"
-              run: curl ${{ env.PIMCORE_TEST_URL }}
-
-            - name: "Checkout code"
-              uses: "actions/checkout@v2"
-
-            - name: "Install PHP"
-              uses: "shivammathur/setup-php@v2"
-              with:
-                  coverage: "none"
-                  extensions: imagick
-                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
-                  php-version: "${{ matrix.php-version }}"
-
-            - name: "Verify DB connection"
+            - name: "Configure Webserver"
               run: |
-                  cp .github/ci/files/.my.cnf ~/.my.cnf
-                  while ! mysqladmin ping --silent; do
-                    sleep 1
-                  done
+                    .github/ci/scripts/setup-apache.sh
+                    curl ${{ env.PIMCORE_TEST_URL }}
 
-            - if: matrix.database == 'mariadb:10.1' || matrix.database == 'percona:5.6'
-              name: "Update DB requirements"
-              run: |
-                  mysql -e "SET GLOBAL innodb_file_format=Barracuda;"
-                  mysql -e "SET GLOBAL innodb_large_prefix=1;"
-
-            - name: "Setup Pimcore environment"
-              run: |
-                  mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
-                  .github/ci/scripts/setup-pimcore-environment.sh
-
-            - run: |
-                    composer require symfony/symfony:${{ matrix.symfony-version }} --no-interaction --no-update --no-scripts
-
-            -   name: "Install dependencies with Composer"
-                uses: "ramsey/composer-install@v1"
-                with:
-                    dependency-versions: "${{ matrix.dependencies }}"
-
-            - name: "Test environment infos"
-              run: |
-                  mysql -e "SELECT VERSION();"
-                  php -i
-                  ./bin/console pimcore:system:requirements:check
-
-            - name: "Run Codeception"
-              run: |
-                  php vendor/bin/codecept run -c . -vvv ${{ matrix.test-options }} --json
+#
+#            - name: "Test Rest"
+#              run: curl ${{ env.PIMCORE_TEST_URL }}
+#
+#            - name: "Checkout code"
+#              uses: "actions/checkout@v2"
+#
+#            - name: "Install PHP"
+#              uses: "shivammathur/setup-php@v2"
+#              with:
+#                  coverage: "none"
+#                  extensions: imagick
+#                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
+#                  php-version: "${{ matrix.php-version }}"
+#
+#            - name: "Verify DB connection"
+#              run: |
+#                  cp .github/ci/files/.my.cnf ~/.my.cnf
+#                  while ! mysqladmin ping --silent; do
+#                    sleep 1
+#                  done
+#
+#            - if: matrix.database == 'mariadb:10.1' || matrix.database == 'percona:5.6'
+#              name: "Update DB requirements"
+#              run: |
+#                  mysql -e "SET GLOBAL innodb_file_format=Barracuda;"
+#                  mysql -e "SET GLOBAL innodb_large_prefix=1;"
+#
+#            - name: "Setup Pimcore environment"
+#              run: |
+#                  mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
+#                  .github/ci/scripts/setup-pimcore-environment.sh
+#
+#            - run: |
+#                    composer require symfony/symfony:${{ matrix.symfony-version }} --no-interaction --no-update --no-scripts
+#
+#            -   name: "Install dependencies with Composer"
+#                uses: "ramsey/composer-install@v1"
+#                with:
+#                    dependency-versions: "${{ matrix.dependencies }}"
+#
+#            - name: "Test environment infos"
+#              run: |
+#                  mysql -e "SELECT VERSION();"
+#                  php -i
+#                  ./bin/console pimcore:system:requirements:check
+#
+#            - name: "Run Codeception"
+#              run: |
+#                  php vendor/bin/codecept run -c . -vvv ${{ matrix.test-options }} --json
