@@ -183,7 +183,7 @@ jobs:
                     PIMCORE_TEST_PHP_VERSION: ${{ matrix.php_version }}
 
             - name: "Test REST"
-              run: curl PIMCORE_TEST_URL
+              run: curl $PIMCORE_TEST_URL
 
 #            - name: "Verify DB connection"
 #              run: |
