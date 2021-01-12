@@ -176,6 +176,13 @@ jobs:
                   ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767, listen = 127.0.0.1:9000
                   php-version: "${{ matrix.php-version }}"
 
+            -   name: Setup php-fpm
+                env:
+                    version: ${{ matrix.php-version }}
+                run: |
+                    sudo apt-get install -y php$version-fpm
+                    sudo cp /usr/sbin/php-fpm$version /usr/bin/php-fpm
+
             -   name: "Configure Webserver"
                 run: |
                     .github/ci/scripts/setup-apache.sh
