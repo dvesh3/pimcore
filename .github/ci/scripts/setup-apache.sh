@@ -30,4 +30,4 @@ sudo sed -e "s?%PIMCORE_TEST_DB_DSN%?$PIMCORE_TEST_DB_DSN?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DATABASE?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_PHP_VERSION%?$PIMCORE_TEST_PHP_VERSION?g" -i $VHOSTCFG
 
-sudo service apache2 restart
+sudo systemctl restart apache2
