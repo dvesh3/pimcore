@@ -35,4 +35,4 @@ sudo sed -e "s?%PIMCORE_TEST_DB_DSN%?$PIMCORE_TEST_DB_DSN?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DATABASE?g" -i $VHOSTCFG
 
 sudo systemctl restart apache2
-sudo journalctl | tail
+systemctl status --no-pager --full apache2
