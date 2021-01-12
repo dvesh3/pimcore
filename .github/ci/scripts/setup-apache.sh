@@ -34,4 +34,4 @@ sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DAT
 sudo a2ensite pimcore-test.dev
 
 sudo systemctl restart apache2
-systemctl status --no-pager --full apache2
+cat systemctl status apache2.service
