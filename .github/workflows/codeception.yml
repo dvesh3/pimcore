@@ -151,7 +151,7 @@ jobs:
 #                  mysql -e "SELECT VERSION();"
 #                  php -i
 #                  ./bin/console pimcore:system:requirements:check
-#
-#            - name: "Run Codeception"
-#              run: |
-#                  php vendor/bin/codecept run -c . -vvv ${{ matrix.test-options }} --json
+
+            - name: "Run Codeception"
+              run: |
+                  php vendor/bin/codecept run -c . -vvv ${{ matrix.test-options }} --json
