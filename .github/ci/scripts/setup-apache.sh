@@ -16,7 +16,7 @@ sudo a2enmod rewrite actions
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
 
-sudo cp -f .github/files/apache/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
+sudo cp -f .github/ci/files/apache/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
 
 # enable pimcore-test.dev config
 sudo ln -s /etc/apache2/sites-available/pimcore-test.dev.conf /etc/apache2/sites-enabled/pimcore-test.dev.conf
