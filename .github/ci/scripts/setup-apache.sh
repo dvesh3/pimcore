@@ -13,13 +13,13 @@ wget https://mirrors.edge.kernel.org/ubuntu/pool/multiverse/liba/libapache-mod-f
 sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
 
 sudo a2enmod rewrite actions
-sudo rm -f /etc/apache2/sites-available/*
-sudo rm -f /etc/apache2/sites-enabled/*
+#sudo rm -f /etc/apache2/sites-available/*
+#sudo rm -f /etc/apache2/sites-enabled/*
 
 sudo cp -f .github/ci/files/apache/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
 
 # enable pimcore-test.dev config
-sudo ln -s /etc/apache2/sites-available/pimcore-test.dev.conf /etc/apache2/sites-enabled/pimcore-test.dev.conf
+#sudo ln -s /etc/apache2/sites-available/pimcore-test.dev.conf /etc/apache2/sites-enabled/pimcore-test.dev.conf
 
 VHOSTCFG=/etc/apache2/sites-available/pimcore-test.dev.conf
 
@@ -29,5 +29,6 @@ sudo sed -e "s?%PIMCORE_ENVIRONMENT%?$PIMCORE_ENVIRONMENT?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_DB_DSN%?$PIMCORE_TEST_DB_DSN?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DATABASE?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_PHP_VERSION%?$PIMCORE_TEST_PHP_VERSION?g" -i $VHOSTCFG
-
+sudo a2dissite 000-default
+sudo a2ensite pimcore-test.dev
 sudo systemctl restart apache2
