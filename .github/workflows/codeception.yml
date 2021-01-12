@@ -111,7 +111,6 @@ jobs:
             - name: "Configure Webserver"
               run: |
                   .github/ci/scripts/setup-apache.sh
-                  curl ${{ env.PIMCORE_TEST_URL }}
 
 
             - name: "Test Rest"
