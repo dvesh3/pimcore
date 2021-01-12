@@ -108,21 +108,21 @@ jobs:
             - name: "Checkout code"
               uses: "actions/checkout@v2"
 
+            - name: "Test Rest"
+              run: curl ${{ env.PIMCORE_TEST_URL }}
+
+            - name: "Install PHP"
+              uses: "shivammathur/setup-php@v2"
+              with:
+                  coverage: "none"
+                  extensions: imagick
+                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
+                  php-version: "${{ matrix.php-version }}"
+
             - name: "Configure Webserver"
               run: |
                   .github/ci/scripts/setup-apache.sh
 
-
-            - name: "Test Rest"
-              run: curl ${{ env.PIMCORE_TEST_URL }}
-#            - name: "Install PHP"
-#              uses: "shivammathur/setup-php@v2"
-#              with:
-#                  coverage: "none"
-#                  extensions: imagick
-#                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
-#                  php-version: "${{ matrix.php-version }}"
-#
 #            - name: "Verify DB connection"
 #              run: |
 #                  cp .github/ci/files/.my.cnf ~/.my.cnf
