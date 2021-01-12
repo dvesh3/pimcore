@@ -16,16 +16,6 @@ sudo a2enmod rewrite actions fastcgi alias env
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
 
-# set up web server config
-echo "Setting up FPM ..."
-export PATH="$HOME/.phpenv/bin:$PATH"
-eval "$(phpenv init -)"
-
-sudo cp -f .github/files/apache/php-fpm.conf ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
-
-echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
-
 sudo cp -f .github/files/apache/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
 
 # enable pimcore-test.dev config

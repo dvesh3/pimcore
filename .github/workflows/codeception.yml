@@ -113,7 +113,7 @@ jobs:
               with:
                   coverage: "none"
                   extensions: imagick
-                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
+                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767, listen = 127.0.0.1:9000
                   php-version: "${{ matrix.php-version }}"
 
             - name: "Configure Webserver"
