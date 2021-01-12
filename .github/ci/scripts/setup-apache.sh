@@ -32,10 +32,11 @@ sudo sed -e "s?%PIMCORE_TEST_PHP_VERSION%?$PIMCORE_TEST_PHP_VERSION?g" -i $VHOST
 
 sudo a2dissite 000-default
 sudo a2ensite pimcore-test.dev
-sudo systemctl reload apache2
 sudo systemctl restart apache2
 
 
+
+cat /etc/apache2/ports.conf
 
 echo "test default"
 cat /etc/apache2/sites-available/000-default.conf
