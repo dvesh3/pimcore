@@ -3,7 +3,7 @@
 set -e
 
 # set home directory permissions to be readable by apache
-sudo chmod 0755 $(pwd)
+sudo chmod 0755 /home/runner/work/pimcore/pimcore
 
 # install apache
 sudo apt-get update --allow-unauthenticated
