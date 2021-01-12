@@ -7,7 +7,11 @@ sudo chmod 0755 $(pwd)
 
 # install apache
 sudo apt-get update --allow-unauthenticated
-sudo apt-get install apache2 libapache2-mod-fastcgi
+sudo apt-get install apache2
+
+wget https://mirrors.edge.kernel.org/ubuntu/pool/multiverse/liba/libapache-mod-fastcgi/libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
+sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
+
 sudo a2enmod rewrite actions fastcgi alias env
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
