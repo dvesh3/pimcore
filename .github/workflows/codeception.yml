@@ -180,7 +180,7 @@ jobs:
                 run: |
                     .github/ci/scripts/setup-apache.sh
                 env:
-                    -   PIMCORE_TEST_PHP_VERSION: ${{ matrix.php_version }}
+                    PIMCORE_TEST_PHP_VERSION: ${{ matrix.php_version }}
 
             - name: "Test REST"
               run: curl PIMCORE_TEST_URL
