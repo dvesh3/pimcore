@@ -11,7 +11,7 @@ sudo apt-get install apache2
 
 wget https://mirrors.edge.kernel.org/ubuntu/pool/multiverse/liba/libapache-mod-fastcgi/libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
 sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
-sudo journalctl | tail
+
 
 
 sudo rm -f /etc/apache2/sites-available/*
@@ -34,3 +34,4 @@ sudo sed -e "s?%PIMCORE_TEST_DB_DSN%?$PIMCORE_TEST_DB_DSN?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DATABASE?g" -i $VHOSTCFG
 
 sudo systemctl restart apache2
+sudo journalctl | tail
