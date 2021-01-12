@@ -15,7 +15,6 @@ sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
 
-
 sudo a2enmod rewrite actions
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
