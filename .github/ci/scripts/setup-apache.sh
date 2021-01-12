@@ -15,13 +15,9 @@ sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8010" | sudo tee /etc/apache2/ports.conf
 
-sudo rm -f /etc/apache2/sites-available/*
-sudo rm -f /etc/apache2/sites-enabled/*
+sudo a2dissite 000-default
 
 sudo cp -f .github/ci/files/apache/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
-
-
-//sudo ln -s /etc/apache2/sites-available/pimcore-test.dev.conf /etc/apache2/sites-enabled/pimcore-test.dev.conf
 
 VHOSTCFG=/etc/apache2/sites-available/pimcore-test.dev.conf
 
