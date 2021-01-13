@@ -188,9 +188,6 @@ jobs:
                     mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
                     .github/ci/scripts/setup-pimcore-environment.sh
 
-            -   name: "Setup Php Version"
-                run: echo "PIMCORE_TEST_PHP_VERSION=${{ matrix.php_version }}" >> $GITHUB_ENV
-
             -   name: "Setup Webserver"
                 run: |
                     .github/ci/scripts/setup-server.sh
