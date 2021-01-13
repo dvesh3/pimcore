@@ -16,14 +16,18 @@ sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
 
 ls -la /etc/php/7.3/fpm/pool.d/
+ls -la /etc/php/7.3/fpm/
 
 sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/pool.d/www.conf
+sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/php-fpm.conf
 
 cat /etc/php/7.3/fpm/pool.d/www.conf
 
 sudo apache2ctl configtest
+sudo systemctl status php7.0-fpm.service
 
-sudo service php7.3-fpm restart
+sudo systemctl restart php7.3-fpm.service
+
 sudo tail -f journalctl -xe
 
 sudo a2enmod rewrite actions alias
