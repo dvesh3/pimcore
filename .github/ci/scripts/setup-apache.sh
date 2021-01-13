@@ -10,8 +10,8 @@ sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2  libapache2-mod-fcgid
 
 sudo apt-get install -y php7.3-fpm
-sudo systemctl status php7.3-fpm
-cat /etc/php/7.3/fpm/pool.d/www.conf
+#sudo systemctl status php7.3-fpm
+#cat /etc/php/7.3/fpm/pool.d/www.conf
 
 sudo a2enmod proxy_fcgi setenvif
 sudo a2enmod actions fcgid alias proxy_fcgi
@@ -19,10 +19,10 @@ sudo a2enmod actions fcgid alias proxy_fcgi
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
 
-cat /etc/apache2/ports.conf
+#cat /etc/apache2/ports.conf
 
-sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/pool.d/www.conf
-sudo systemctl restart php7.3-fpm
+#sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/pool.d/www.conf
+#sudo systemctl restart php7.3-fpm
 
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
