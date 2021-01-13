@@ -3,14 +3,14 @@
 set -e
 
 # set home directory permissions to be readable by apache
-sudo chmod 0755 $(pwd)
+#sudo chmod 0755 $(pwd)
+sudo chown -R www-data:www-data $(pwd)
 
 # install apache
 sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2 libapache2-mod-fastcgi
-sudo a2enmod rewrite actions fastcgi alias
-
 sudo apt-get install -y php7.3-fpm
+sudo a2enmod rewrite actions fastcgi alias
 
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8080" | sudo tee /etc/apache2/ports.conf

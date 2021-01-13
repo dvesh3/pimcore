@@ -190,7 +190,7 @@ jobs:
 
             -   name: "Setup Webserver"
                 run: |
-                    .github/ci/scripts/setup-apache.sh
+                    .github/ci/scripts/setup-server.sh
 
             -   name: "Test URL"
                 run: curl $PIMCORE_TEST_URL
