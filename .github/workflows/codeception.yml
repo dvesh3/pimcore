@@ -194,8 +194,6 @@ jobs:
             -   name: "Setup Webserver"
                 run: |
                     .github/ci/scripts/setup-server.sh
-                with:
-                    pimcore_php_version1: ${{ matrix.php_version }}
 
 
             -   name: "Update symfony/symfony requirement in composer.json"
