@@ -179,19 +179,19 @@ jobs:
                   ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
                   php-version: "${{ matrix.php-version }}"
 
-            -   name: "Setup Pimcore environment"
-                env:
-                    version: ${{ matrix.php-version }}
+            -   name: "Setup Webserver"
                 run: |
-                    sudo apt-get install -y php$version-fpm
-                    sudo service php$version-fpm start
+                    .github/ci/scripts/setup-apache.sh
+
+            -   name: "Setup Pimcore environment"
+                run: |
                     cp .github/ci/files/.my.cnf ~/.my.cnf
                     while ! mysqladmin ping --silent; do
                         sleep 1
                     done
                     mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
                     .github/ci/scripts/setup-pimcore-environment.sh
-                    .github/ci/scripts/setup-apache.sh
+
 
 #            -   name: "Test URL"
 #                run: curl $PIMCORE_TEST_URL
