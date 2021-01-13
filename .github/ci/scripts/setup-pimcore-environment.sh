@@ -3,6 +3,9 @@
 set -eu
 
 mkdir -p var/config
+mkdir -p var/logs
+
+sudo chmod 0755 var/logs
 
 cp -r .github/ci/files/app app
 cp -r .github/ci/files/bin/console bin/console
