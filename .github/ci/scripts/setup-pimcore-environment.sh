@@ -3,9 +3,8 @@
 set -eu
 
 mkdir -p var/config
-mkdir -p var/logs
 
-sudo chmod 0777 var/logs
+sudo chown -R www-data:www-data var
 
 cp -r .github/ci/files/app app
 cp -r .github/ci/files/bin/console bin/console
