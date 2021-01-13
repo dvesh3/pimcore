@@ -12,6 +12,9 @@ sudo a2enmod rewrite actions fastcgi alias
 
 sudo apt-get install -y php7.3-fpm
 
+sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
+echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
+
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
 
