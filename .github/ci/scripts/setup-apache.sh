@@ -18,7 +18,6 @@ echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
 sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/pool.d/www.conf
 
 
-tail journalctl -xe
 sudo systemctl restart php7.3-fpm.service
 
 sudo rm -f /etc/apache2/sites-available/*
