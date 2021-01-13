@@ -18,7 +18,6 @@ env:
     PIMCORE_TEST: 1
     PIMCORE_TEST_DB_DSN: "mysql://root@127.0.0.1:33006/pimcore_test"
     PIMCORE_TEST_REDIS_DSN: "redis://127.0.0.1:63379"
-    PIMCORE_TEST_URL: "http://127.0.0.1:8080"
 
 jobs:
 #    codeception-tests:
@@ -136,6 +135,10 @@ jobs:
         runs-on: "ubuntu-18.04"
         continue-on-error: ${{ matrix.experimental }}
 
+        env:
+            PIMCORE_TEST_URL: "http://127.0.0.1:8080"
+            PIMCORE_TEST_PHP_VERSION: ${{ matrix.php-version }}
+
         strategy:
             matrix:
                 include:
@@ -173,38 +176,28 @@ jobs:
               with:
                   coverage: "none"
                   extensions: imagick
-                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767, listen = 127.0.0.1:9000
+                  ini-values: display_errors=On, display_startup_errors=On, error_reporting=32767
                   php-version: "${{ matrix.php-version }}"
 
-            -   name: Setup php-fpm
+            -   name: "Setup Pimcore environment"
                 env:
                     version: ${{ matrix.php-version }}
                 run: |
                     sudo apt-get install -y php$version-fpm
-                    sudo cp /usr/sbin/php-fpm$version /usr/bin/php-fpm
-
-            -   name: "Configure Webserver"
-                run: |
+                    sudo service php$version-fpm start
+                    cp .github/ci/files/.my.cnf ~/.my.cnf
+                    while ! mysqladmin ping --silent; do
+                        sleep 1
+                    done
+                    mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
+                    .github/ci/scripts/setup-pimcore-environment.sh
                     .github/ci/scripts/setup-apache.sh
-                env:
-                    PIMCORE_TEST_PHP_VERSION: ${{ matrix.php_version }}
 
-            - name: "Test REST"
-              run: curl $PIMCORE_TEST_URL
-
-#            - name: "Verify DB connection"
-#              run: |
-#                  cp .github/ci/files/.my.cnf ~/.my.cnf
-#                  while ! mysqladmin ping --silent; do
-#                    sleep 1
-#                  done
+#            -   name: "Test URL"
+#                run: curl $PIMCORE_TEST_URL
 #
-#            -   name: "Setup Pimcore environment"
+#            -   name: "Update symfony/symfony requirement in composer.json"
 #                run: |
-#                    mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
-#                    .github/ci/scripts/setup-pimcore-environment.sh
-#
-#            -   run: |
 #                    composer require symfony/symfony:${{ matrix.symfony-version }} --no-interaction --no-update --no-scripts
 #
 #            -   name: "Install dependencies with Composer"

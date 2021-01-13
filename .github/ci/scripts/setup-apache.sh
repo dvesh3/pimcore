@@ -3,20 +3,31 @@
 set -e
 
 # set home directory permissions to be readable by apache
-sudo chmod 0755 $(pwd)
-sudo chown -R www-data:www-data $(pwd)
+sudo chmod -R 755 $(pwd)
 
 # install apache
 sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2
 
-wget https://mirrors.edge.kernel.org/ubuntu/pool/multiverse/liba/libapache-mod-fastcgi/libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
-sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
+#wget https://mirrors.edge.kernel.org/ubuntu/pool/multiverse/liba/libapache-mod-fastcgi/libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
+#sudo dpkg -i libapache2-mod-fastcgi_2.4.7~0910052141-1.2_amd64.deb
 
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
 
-sudo a2enmod rewrite actions
+ls -la /etc/php/7.3/fpm/pool.d/
+
+sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/pool.d/www.conf
+
+cat /etc/php/7.3/fpm/pool.d/www.conf
+
+sudo apache2ctl configtest
+
+sudo service php7.3-fpm restart
+sudo tail -f journalctl -xe
+
+sudo a2enmod rewrite actions alias
+
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
 
@@ -34,4 +45,6 @@ sudo sed -e "s?%PIMCORE_TEST_DB_DSN%?$PIMCORE_TEST_DB_DSN?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DATABASE?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_PHP_VERSION%?$PIMCORE_TEST_PHP_VERSION?g" -i $VHOSTCFG
 
+sudo apache2ctl configtest
 sudo systemctl restart apache2.service
+journalctl | tail
