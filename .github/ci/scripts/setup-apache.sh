@@ -10,6 +10,8 @@ sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2 libapache2-mod-fastcgi
 sudo a2enmod rewrite actions fastcgi alias env
 
+export PATH="$HOME/.phpenv/bin:$PATH"
+eval "$(phpenv init -)"
 phpenv config-add .github/server-config/php.ini
 
 sudo rm -f /etc/apache2/sites-available/*
