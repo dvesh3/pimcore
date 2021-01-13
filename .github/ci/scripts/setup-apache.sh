@@ -8,22 +8,12 @@ sudo chmod 0755 $(pwd)
 # install apache
 sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2 libapache2-mod-fastcgi
-sudo a2enmod rewrite actions fastcgi alias env
+sudo a2enmod rewrite actions fastcgi alias
 
-export PATH="$HOME/.phpenv/bin:$PATH"
-eval "$(phpenv init -)"
-phpenv config-add .github/server-config/php.ini
+sudo apt-get install -y php7.3-fpm
 
 sudo rm -f /etc/apache2/sites-available/*
 sudo rm -f /etc/apache2/sites-enabled/*
-
- # set up web server config
-echo "Setting up FPM ..."
-
-sudo cp -f .github/server-config/php-fpm.conf ~/.phpenv/versions/$(phpenv version-name)/etc/php-fpm.conf
-
-echo "cgi.fix_pathinfo = 1" >> ~/.phpenv/versions/$(phpenv version-name)/etc/php.ini
-~/.phpenv/versions/$(phpenv version-name)/sbin/php-fpm
 
 sudo cp -f .github/server-config/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
 
