@@ -6,7 +6,7 @@ mkdir -p var/config
 
 ps aux | egrep '(apache|httpd)'
 
-sudo chown -R $USER:www-data var
+sudo chown -R runner:www-data var
 chmod -R 775 var
 
 cp -r .github/ci/files/app app
