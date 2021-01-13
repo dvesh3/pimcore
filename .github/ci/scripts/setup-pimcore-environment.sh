@@ -4,10 +4,9 @@ set -eu
 
 mkdir -p var/config
 
-ps aux | egrep '(apache|httpd)'
-
-sudo chown -R runner:www-data var
-chmod -R 775 var
+HTTPDUSER=$(ps axo user,comm | grep -E '[a]pache|[h]ttpd|[_]www|[w]ww-data|[n]ginx' | grep -v root | head -1 | cut -d\  -f1)
+sudo setfacl -dR -m u:"$HTTPDUSER":rwX -m u:$(whoami):rwX var
+sudo setfacl -R -m u:"$HTTPDUSER":rwX -m u:$(whoami):rwX var
 
 cp -r .github/ci/files/app app
 cp -r .github/ci/files/bin/console bin/console
