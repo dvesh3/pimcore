@@ -4,7 +4,10 @@ set -eu
 
 mkdir -p var/config
 
-sudo chown -R www-data:www-data var
+ps aux | egrep '(apache|httpd)'
+
+sudo chown -R $USER:www-data var
+chmod -R 775 var
 
 cp -r .github/ci/files/app app
 cp -r .github/ci/files/bin/console bin/console
