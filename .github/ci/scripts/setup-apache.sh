@@ -24,11 +24,13 @@ echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
 #sudo cp -f .github/ci/files/apache/php-fpm.conf /etc/php/7.3/fpm/pool.d/www.conf
 #sudo systemctl restart php7.3-fpm
 
-sudo rm -f /etc/apache2/sites-available/*
-sudo rm -f /etc/apache2/sites-enabled/*
+#sudo rm -f /etc/apache2/sites-available/*
+#sudo rm -f /etc/apache2/sites-enabled/*
 
 sudo cp -f .github/ci/files/apache/apache-fpm.conf /etc/apache2/sites-available/pimcore-test.dev.conf
-sudo ln -s /etc/apache2/sites-available/pimcore-test.dev.conf /etc/apache2/sites-enabled/pimcore-test.dev.conf
+sudo a2dissite 000-default
+sudo a2ensite pimcore-test.dev
+#sudo ln -s /etc/apache2/sites-available/pimcore-test.dev.conf /etc/apache2/sites-enabled/pimcore-test.dev.conf
 
 VHOSTCFG=/etc/apache2/sites-enabled/pimcore-test.dev.conf
 
