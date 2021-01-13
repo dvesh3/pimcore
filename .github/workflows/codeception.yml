@@ -142,12 +142,12 @@ jobs:
         strategy:
             matrix:
                 include:
-#                    -   name: "REST Tests - PHP 7.4 | Symfony 3.4 | MySQL 8.0"
-#                        php-version: 7.4
-#                        dependencies: highest
-#                        experimental: false
-#                        database: "mysql:8.0"
-#                        symfony-version: "^3.4"
+                    -   name: "REST Tests - PHP 7.4 | Symfony 3.4 | MySQL 8.0"
+                        php-version: 7.4
+                        dependencies: highest
+                        experimental: false
+                        database: "mysql:8.0"
+                        symfony-version: "^3.4"
 
                     -   name: "REST Tests - PHP 7.3 | Symfony 3.4"
                         php-version: 7.3
@@ -188,12 +188,15 @@ jobs:
                     mysql -e "CREATE DATABASE pimcore_test CHARSET=utf8mb4;"
                     .github/ci/scripts/setup-pimcore-environment.sh
 
+            -   name: "Setup Php Version"
+                run: echo "PIMCORE_TEST_PHP_VERSION=${{ matrix.php_version }}" >> $GITHUB_ENV
+
             -   name: "Setup Webserver"
                 run: |
                     .github/ci/scripts/setup-server.sh
+                with:
+                    pimcore_php_version1: ${{ matrix.php_version }}
 
-            -   name: "Test URL"
-                run: curl $PIMCORE_TEST_URL
 
             -   name: "Update symfony/symfony requirement in composer.json"
                 run: |

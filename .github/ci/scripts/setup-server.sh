@@ -5,10 +5,13 @@ set -e
 # set home directory permissions to be readable by apache
 sudo chmod 0755 $(pwd)
 
+echo $INPUT_PIMCORE_TEST_PHP_VERSION1
+echo $PIMCORE_TEST_PHP_VERSION
+
 # install apache
 sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2 libapache2-mod-fastcgi
-sudo apt-get install -y php7.3-fpm
+sudo apt-get install -y php$PIMCORE_TEST_PHP_VERSION-fpm
 sudo a2enmod rewrite actions fastcgi alias
 
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
@@ -29,5 +32,6 @@ sudo sed -e "s?%GITHUB_WORKSPACE_DIR%?$(pwd)?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_ENVIRONMENT%?$PIMCORE_ENVIRONMENT?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_DB_DSN%?$PIMCORE_TEST_DB_DSN?g" -i $VHOSTCFG
 sudo sed -e "s?%PIMCORE_TEST_CACHE_REDIS_DATABASE%?$PIMCORE_TEST_CACHE_REDIS_DATABASE?g" -i $VHOSTCFG
+sudo sed -e "s?%PIMCORE_TEST_PHP_VERSION%?$PIMCORE_TEST_PHP_VERSION?g" -i $VHOSTCFG
 
 sudo service apache2 restart
