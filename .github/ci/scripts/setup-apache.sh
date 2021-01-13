@@ -8,9 +8,10 @@ sudo chmod -R 755 $(pwd)
 # install apache
 sudo apt-get update --allow-unauthenticated
 sudo apt-get install apache2  libapache2-mod-fcgid
-sudo a2enmod actions fcgid alias proxy_fcgi
+
 sudo apt-get install -y php7.3-fpm
-sudo service php7.3-fpm start
+sudo systemctl status php7.3-fpm
+sudo a2enmod actions fcgid alias proxy_fcgi
 
 sudo mv /etc/apache2/ports.conf /etc/apache2/ports.conf.default
 echo "Listen 8080" | sudo tee /etc/apache2/ports.conf
