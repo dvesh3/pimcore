@@ -192,24 +192,24 @@ jobs:
                 run: |
                     .github/ci/scripts/setup-apache.sh
 
-#            -   name: "Test URL"
-#                run: curl $PIMCORE_TEST_URL
-#
-#            -   name: "Update symfony/symfony requirement in composer.json"
-#                run: |
-#                    composer require symfony/symfony:${{ matrix.symfony-version }} --no-interaction --no-update --no-scripts
-#
-#            -   name: "Install dependencies with Composer"
-#                uses: "ramsey/composer-install@v1"
-#                with:
-#                    dependency-versions: "${{ matrix.dependencies }}"
-#
-#            -   name: "Test environment infos"
-#                run: |
-#                    mysql -e "SELECT VERSION();"
-#                    php -i
-#                    ./bin/console pimcore:system:requirements:check
-#
-#            -   name: "Run Codeception"
-#                run: |
-#                    php vendor/bin/codecept run -c . -vvv Rest --env http --json
+            -   name: "Test URL"
+                run: curl $PIMCORE_TEST_URL
+
+            -   name: "Update symfony/symfony requirement in composer.json"
+                run: |
+                    composer require symfony/symfony:${{ matrix.symfony-version }} --no-interaction --no-update --no-scripts
+
+            -   name: "Install dependencies with Composer"
+                uses: "ramsey/composer-install@v1"
+                with:
+                    dependency-versions: "${{ matrix.dependencies }}"
+
+            -   name: "Test environment infos"
+                run: |
+                    mysql -e "SELECT VERSION();"
+                    php -i
+                    ./bin/console pimcore:system:requirements:check
+
+            -   name: "Run Codeception"
+                run: |
+                    php vendor/bin/codecept run -c . -vvv Rest --env http --json
