@@ -164,11 +164,11 @@
   "require-dev": {
     "cache/integration-tests": "dev-master",
     "codeception/codeception": "5.0.0-alpha2",
-    "codeception/module-symfony": "^1.6.0",
+    "codeception/module-symfony": "dev-master",
     "codeception/phpunit-wrapper": "^9",
     "phpstan/phpstan": "^1.4.7",
     "phpstan/phpstan-symfony": "^1.1.7",
-    "phpunit/phpunit": "^9.3",
+    "phpunit/phpunit": "dev-master",
     "spiritix/php-chrome-html2pdf": "^1.6",
     "elasticsearch/elasticsearch": "^7.11",
     "composer/composer": "*"
