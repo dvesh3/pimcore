@@ -163,9 +163,6 @@
   },
   "require-dev": {
     "cache/integration-tests": "dev-master",
-    "codeception/codeception": "5.0.0-alpha2",
-    "codeception/module-symfony": "dev-main",
-    "codeception/phpunit-wrapper": "^9",
     "phpstan/phpstan": "^1.4.7",
     "phpstan/phpstan-symfony": "^1.1.7",
     "phpunit/phpunit": "dev-master",
