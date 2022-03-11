@@ -9,9 +9,6 @@ parameters:
     bootstrapFiles:
         - phpstan-bootstrap.php
 
-    symfony:
-        container_xml_path: var/cache/test/App_KernelTestDebugContainer.xml
-
     excludePaths:
         - '**/External/AdminerController.php'
         - '**/Processor/PdfReactor.php'
