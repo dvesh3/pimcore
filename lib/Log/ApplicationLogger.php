@@ -137,7 +137,7 @@ class ApplicationLogger implements LoggerInterface
     /**
      * {@inheritdoc}
      */
-    public function log($level, \Stringable|string $message, array $context = []): void
+    public function log($level, $message, array $context = []): void
     {
         if (!isset($context['component']) || is_null($context['component'])) {
             $context['component'] = $this->component;
