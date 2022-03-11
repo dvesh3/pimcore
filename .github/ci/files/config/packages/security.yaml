@@ -26,7 +26,7 @@ security:
             logout:
                 path:   /admin/logout
                 target: /admin/login
-            entry_point: Pimcore\Bundle\AdminBundle\Security\Guard\AdminAuthenticator
+            entry_point: form_login
             two_factor:
                 auth_form_path: /admin/login/2fa                   # Path or route name of the two-factor form
                 check_path: /admin/login/2fa-verify                # Path or route name of the two-factor code check
