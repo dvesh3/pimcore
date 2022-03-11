@@ -320,6 +320,7 @@ class Composer
      */
     public static function clearCache(Event $event)
     {
+        return true;
         $options = static::getOptions($event);
         $consoleDir = static::getConsoleDir($event, 'clear the cache');
 
