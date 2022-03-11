@@ -329,24 +329,6 @@ final class PimcoreCoreExtension extends ConfigurableExtension implements Prepen
     }
 
     /**
-     * Handle pimcore.security.encoder_factories mapping
-     *
-     * @param ContainerBuilder $container
-     * @param array $config
-     */
-    private function configurePasswordEncoders(ContainerBuilder $container, array $config)
-    {
-        $definition = $container->findDefinition('pimcore.security.encoder_factory');
-
-        $factoryMapping = [];
-        foreach ($config['security']['encoder_factories'] as $className => $factoryConfig) {
-            $factoryMapping[$className] = new Reference($factoryConfig['id']);
-        }
-
-        $definition->replaceArgument(1, $factoryMapping);
-    }
-
-    /**
      * Handle pimcore.security.password_hasher_factories mapping
      *
      * @param ContainerBuilder $container
