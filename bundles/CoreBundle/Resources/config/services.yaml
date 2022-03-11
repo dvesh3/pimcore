@@ -3,6 +3,9 @@ services:
         autowire: true
         autoconfigure: true
 
+
+    Symfony\Component\DependencyInjection\ContainerInterface: '@service_container'
+
     #
     # SESSION
     #
