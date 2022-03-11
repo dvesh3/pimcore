@@ -286,6 +286,7 @@ class Composer
      */
     public static function installAssets(Event $event)
     {
+        return true;
         $options = static::getOptions($event);
         $consoleDir = static::getConsoleDir($event, 'install assets');
 
