@@ -16,7 +16,6 @@ security:
 
         # Pimcore admin form login // DO NOT CHANGE!
         pimcore_admin:
-            anonymous: ~
             pattern: ^/admin(/.*)?$
             # admin firewall is stateless as we open the admin
             # session on demand for non-blocking parallel requests
@@ -25,10 +24,7 @@ security:
             logout:
                 path:   /admin/logout
                 target: /admin/login
-            guard:
-                entry_point: Pimcore\Bundle\AdminBundle\Security\Guard\AdminAuthenticator
-                authenticators:
-                    - Pimcore\Bundle\AdminBundle\Security\Guard\AdminAuthenticator
+            entry_point: Pimcore\Bundle\AdminBundle\Security\Guard\AdminAuthenticator
             two_factor:
                 auth_form_path: /admin/login/2fa                   # Path or route name of the two-factor form
                 check_path: /admin/login/2fa-verify                # Path or route name of the two-factor code check
