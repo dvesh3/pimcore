@@ -11,8 +11,7 @@ services:
         public: true
         class: Symfony\Component\HttpFoundation\Session\Session
         arguments:
-            $storage: '@session.storage'
-            $flashes: '@session.flash_bag'
+            $storage: '@session.storage.factory.native'
 
 
     # Sessions need to be configured (e.g. adding custom attribute bags) before they are started. The configurator handles
