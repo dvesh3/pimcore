@@ -48,7 +48,7 @@ final class PimcoreCoreExtension extends ConfigurableExtension implements Prepen
     /**
      * @return string
      */
-    public function getAlias()
+    public function getAlias(): string
     {
         return 'pimcore';
     }

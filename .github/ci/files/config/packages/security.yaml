@@ -25,7 +25,6 @@ security:
             logout:
                 path:   /admin/logout
                 target: /admin/login
-                success_handler: Pimcore\Bundle\AdminBundle\Security\LogoutSuccessHandler
             guard:
                 entry_point: Pimcore\Bundle\AdminBundle\Security\Guard\AdminAuthenticator
                 authenticators:
