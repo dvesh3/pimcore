@@ -252,7 +252,7 @@ class ApplicationLogger implements LoggerInterface
     /**
      * {@inheritdoc}
      */
-    public function emergency (string|\Stringable $message, array $context = []): void
+    public function emergency ($message, array $context = []): void
     {
         $this->handleLog('emergency', $message, func_get_args());
     }
