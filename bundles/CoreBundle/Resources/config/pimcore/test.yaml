@@ -1,5 +1,8 @@
 framework:
     test: ~
+    session:
+        enabled: true
+        handler_id: 'session.handler.native_file'
     profiler: false
     mailer:
         transports:
